@@ -1,3 +1,6 @@
+class Symbol():
+    pass
+
 class VariableSymbol(Symbol):
 
     def __init__(self, name, type):
@@ -25,7 +28,7 @@ class SymbolTable(object):
         self.store[name] = symbol
 
     def get(self, name): # get variable symbol or fundef from <name> entry
-        if self.store[name] is not None:
+        if name in self.store:
             return self.store[name]
         else:
             if self.parent is not None:
@@ -42,5 +45,6 @@ class SymbolTable(object):
         return curr
 
     def popScope(self):
-        self.scopes.pop()
+        if len(self.scopes) > 0:
+            self.scopes.pop()
         return self.parent

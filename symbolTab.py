@@ -1,32 +1,46 @@
 class VariableSymbol(Symbol):
 
     def __init__(self, name, type):
-        pass
-    #
+        self.name = name
+        self.type = type
+
+
+class FunctionSymbol(Symbol):
+
+    def __init__(self, name, type, arguments):
+        self.name = name
+        self.type = type
+        self.arguments = arguments
 
 
 class SymbolTable(object):
 
     def __init__(self, parent, name): # parent scope and symbol table name
-        pass
-    #
+        self.parent = parent
+        self.name = name
+        self.store = {}
+        self.scopes= []
 
     def put(self, name, symbol): # put variable symbol or fundef under <name> entry
-        pass
-    #
+        self.store[name] = symbol
 
     def get(self, name): # get variable symbol or fundef from <name> entry
-        pass
-    #
+        if self.store[name] is not None:
+            return self.store[name]
+        else:
+            if self.parent is not None:
+                return self.parent.get(name)
+            else:
+                return None
 
     def getParentScope(self):
-        pass
-    #
+        return self.parent
 
     def pushScope(self, name):
-        pass
-    #
+        curr = SymbolTable(self, name)
+        self.scopes.append(curr)
+        return curr
 
     def popScope(self):
-        pass
-    #
+        self.scopes.pop()
+        return self.parent

@@ -38,13 +38,6 @@ class NodeVisitor(object): #oryginalna ze stronki z dokumentacją
                 self.visit(value)
 
 
-    # simpler version of generic_visit, not so general
-    #def generic_visit(self, node):
-    #    for child in node.children:
-    #        self.visit(child)
-
-
-
 class TypeChecker(NodeVisitor):
 
     def visit_BinExpr(self, node):
@@ -58,12 +51,12 @@ class TypeChecker(NodeVisitor):
 
     def visit_Const(self, node):
 
-    def visit_Declaraions(self, node):
+#    def visit_Declaraions(self, node):
     def visit_Declaration(self, node):
-    def visit_Instructions(self, node):
+#    def visit_Instructions(self, node):
     def visit_ReturnInstr(self, node):
     def visit_PrintInstr(self, node):
-    def visit_Inits(self, node):
+#    def visit_Inits(self, node):
     def visit_Init(self, node):
     def visit_AssignmentInstruction(self, node):
     def visit_ChoiceInstr(self, node):
@@ -77,17 +70,11 @@ class TypeChecker(NodeVisitor):
     def visit_ExpressionList(self, node):
     def visit_FunctionList(self, node):
     def visit_Function(self, node):
-    def visit_Arguments(self, node):
+#    def visit_Arguments(self, node):
     def visit_Argument(self, node):
     def visit_Block(self, node):
-    def visit_Blocks(self, node):
-#    def visit_RelExpr(self, node):
-#        type1 = self.visit(node.left)     # type1 = node.left.accept(self)
-#        type2 = self.visit(node.right)    # type2 = node.right.accept(self)
-#        # ...
-#        #
-#
-#    def visit_Integer(self, node):
-#        return 'int'
-#
-#    #def visit_Float(self, node):
+#    def visit_Blocks(self, node):
+    def visit_Integer(self, node):
+        return 'int'
+    def visit_Float(self,node):
+        return 'float'

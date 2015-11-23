@@ -159,7 +159,7 @@ class Cparser(object):
         """assignment : ID '=' expression ';' """
         id = p[1]
         expr = p[3]
-        p[0] = AST.AssignmentInstruction(id, expr)
+        p[0] = AST.AssignmentInstr(id, expr)
 
     def p_choice_instr(self, p):
         """choice_instr : IF '(' condition ')' instruction  %prec IFX
@@ -196,14 +196,14 @@ class Cparser(object):
 
     def p_break_instr(self, p):
         """break_instr : BREAK ';' """
-        p[0] = AST.BreakInstruction()
+        p[0] = AST.BreakInstr()
 
     def p_compound_instr(self, p):
         """compound_instr : '{' declarations instructions_opt '}' """
         if len(p[2].declarations) != 0:
-            p[0] = AST.CompoundInstruction(p[2], p[3])
+            p[0] = AST.CompoundInstr(p[2], p[3])
         else:
-            p[0] = AST.CompoundInstruction(None, p[3])
+            p[0] = AST.CompoundInstr(None, p[3])
 
     def p_condition(self, p):
         """condition : expression"""
@@ -269,10 +269,10 @@ class Cparser(object):
         """expr_list : expr_list ',' expression
                      | expression """
         if len(p) != 4:
-            p[0] = AST.ExpressionList()
+            p[0] = AST.ExprList()
             p[0].push(p[1])
         else:
-            p[0] = AST.ExpressionList() if p[1] is None else p[1]
+            p[0] = AST.ExprList() if p[1] is None else p[1]
             p[0].push(p[3])
 
     def p_fundefs_opt(self, p):

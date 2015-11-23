@@ -4,13 +4,9 @@ class Node(object):
     def __str__(self):
         return self.printTree()
 
-#class Node(object):
-#
-#    def accept(self, visitor):
-#        return visitor.visit(self)
-#
-#    def __init__(self):
-#        self.children = ()
+    def accept(self, visitor):
+        return visitor.visit(self)
+
 
 class BinExpr(Node):
 
@@ -18,14 +14,6 @@ class BinExpr(Node):
         self.op = op
         self.left = left
         self.right = right
-
-#class BinExpr(Node):
-#
-#    def __init__(self, op, left, right, token):
-#        self.token = token
-#        self.op = op
-#        self.left = left
-#        self.right = right
 
 class Const(Node):
     def __init__(self, val):
@@ -38,6 +26,9 @@ class Declarations(Node):
     def push(self, declaration):
         self.declarations.append(declaration)
 
+    def children(self):
+        return self.declarations
+
 class Declaration(Node):
     def __init__(self, type, inits):
         self.type = type
@@ -49,6 +40,9 @@ class Instructions(Node):
 
     def push(self, instruction):
         self.instructions.append(instruction)
+
+    def children(self):
+        return self.instructions
 
 class ReturnInstr(Node):
     def __init__(self, expr):
@@ -65,12 +59,15 @@ class Inits(Node):
     def push(self, init):
         self.inits.append(init)
 
+    def children(self):
+        return self.inits
+
 class Init(Node):
     def __init__(self, id, expr):
         self.id = id
         self.expr = expr
 
-class AssignmentInstruction(Node):
+class AssignmentInstr(Node):
     def __init__(self, id, expr):
         self.id = id
         self.expr = expr
@@ -94,10 +91,10 @@ class RepeatInstr(Node):
 class ContinueInstr(Node):
     pass #use default
 
-class BreakInstruction(Node):
+class BreakInstr(Node):
     pass #use default
 
-class CompoundInstruction(Node):
+class CompoundInstr(Node):
     def __init__(self, declarations, instructions_opt):
         self.declarations = declarations
         self.instructions_opt = instructions_opt
@@ -111,12 +108,15 @@ class ExprInBrackets(Node):
     def __init__(self, expr):
         self.expr = expr
 
-class ExpressionList(Node):
+class ExprList(Node):
     def __init__(self):
         self.expressions = []
 
     def push(self, expr):
         self.expressions.append(expr)
+
+    def children(self):
+        return self.expressions
 
 class FunctionList(Node):
     def __init__(self):
@@ -124,6 +124,9 @@ class FunctionList(Node):
 
     def push(self, expr):
         self.functions.append(expr)
+
+    def children(self):
+        return self.functions
 
 class Function(Node):
     def __init__(self, type, id, args_list_or_empty, compound_instr):
@@ -138,6 +141,9 @@ class Arguments(Node):
 
     def push(self, argument):
         self.arguments.append(argument)
+
+    def children(self):
+        return self.arguments
 
 class Argument(Node):
     def __init__(self, type, id):
@@ -158,3 +164,6 @@ class Blocks(Node):
 
     def push(self, block):
         self.blocks.append(block)
+
+    def children(self):
+        return self.blocks

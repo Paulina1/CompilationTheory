@@ -63,7 +63,7 @@ class TreePrinter:
     def printTree(self, indent=0):
 		return "| " * indent + "=\n" + "| " * (indent + 1) + self.id + "\n" + self.expr.printTree(indent + 1)
 
-    @addToClass(AST.AssignmentInstruction)
+    @addToClass(AST.AssignmentInstr)
     def printTree(self, indent=0):
 		return "| " * indent + "=\n" + "| " * (indent + 1) + self.id + "\n" + self.expr.printTree(indent+1)
 
@@ -86,11 +86,11 @@ class TreePrinter:
     def printTree(self, indent=0):
 		return "| " * indent + "CONTINUE\n"
 
-    @addToClass(AST.BreakInstruction)
+    @addToClass(AST.BreakInstr)
     def printTree(self, indent=0):
 		return "| " * indent + "BREAK\n"
 
-    @addToClass(AST.CompoundInstruction)
+    @addToClass(AST.CompoundInstr)
     def printTree(self, indent=0):
         ret = ''
         if self.declarations is not None:
@@ -106,7 +106,7 @@ class TreePrinter:
     def printTree(self, indent=0):
 		return self.expr.printTree(indent)
 
-    @addToClass(AST.ExpressionList)
+    @addToClass(AST.ExprList)
     def printTree(self, indent=0):
         ret = ''
         for expression in self.expressions:

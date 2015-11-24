@@ -43,6 +43,8 @@ ttype['NEQ']['int']['int'] = 'int'
 ttype['>=']['int']['int'] = 'int'
 ttype['<=']['int']['int'] = 'int'
 ttype['!=']['int']['int'] = 'int'
+ttype['%']['int']['int'] = 'int'
+
 ttype['>']['int']['float'] = 'int'
 ttype['<']['int']['float'] = 'int'
 ttype['LE']['int']['float'] = 'int'

@@ -108,5 +108,5 @@ _lr_productions = [
   ('args_list_or_empty -> <empty>','args_list_or_empty',0,'p_args_list_or_empty','Cparser.py',299),
   ('args_list -> args_list , arg','args_list',3,'p_args_list','Cparser.py',306),
   ('args_list -> arg','args_list',1,'p_args_list','Cparser.py',307),
-  ('arg -> TYPE ID','arg',2,'p_arg','Cparser.py',319),
+  ('arg -> TYPE ID','arg',2,'p_arg','Cparser.py',320),
 ]

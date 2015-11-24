@@ -39,35 +39,50 @@ ttype['LE']['int']['int'] = 'int'
 ttype['GE']['int']['int'] = 'int'
 ttype['EQ']['int']['int'] = 'int'
 ttype['NEQ']['int']['int'] = 'int'
+ttype['>=']['int']['int'] = 'int'
+ttype['<=']['int']['int'] = 'int'
+ttype['!=']['int']['int'] = 'int'
 ttype['>']['int']['float'] = 'int'
 ttype['<']['int']['float'] = 'int'
 ttype['LE']['int']['float'] = 'int'
 ttype['GE']['int']['float'] = 'int'
 ttype['EQ']['int']['float'] = 'int'
 ttype['NEQ']['int']['float'] = 'int'
+ttype['>=']['int']['float'] = 'int'
+ttype['<=']['int']['float'] = 'int'
+ttype['!=']['int']['float'] = 'int'
 ttype['>']['float']['int'] = 'int'
 ttype['<']['float']['int'] = 'int'
 ttype['LE']['float']['int'] = 'int'
 ttype['GE']['float']['int'] = 'int'
 ttype['EQ']['float']['int'] = 'int'
 ttype['NEQ']['float']['int'] = 'int'
+ttype['>=']['float']['int'] = 'int'
+ttype['>=']['float']['int'] = 'int'
+ttype['!=']['float']['int'] = 'int'
 ttype['>']['float']['float'] = 'int'
 ttype['<']['float']['float'] = 'int'
 ttype['LE']['float']['float'] = 'int'
 ttype['GE']['float']['float'] = 'int'
 ttype['EQ']['float']['float'] = 'int'
 ttype['NEQ']['float']['float'] = 'int'
+ttype['>=']['float']['float'] = 'int'
+ttype['<=']['float']['float'] = 'int'
+ttype['!=']['float']['float'] = 'int'
 
 ttype['+']['string']['string'] = 'string'
 
 ttype['>']['string']['string'] = 'int'
 ttype['<']['string']['string'] = 'int'
+ttype['>=']['string']['string'] = 'int'
+ttype['<=']['string']['string'] = 'int'
+ttype['!=']['string']['string'] = 'int'
 ttype['LE']['string']['string'] = 'int'
 ttype['GE']['string']['string'] = 'int'
 ttype['EQ']['string']['string'] = 'int'
 ttype['NEQ']['string']['string'] = 'int'
 
-#    przypisanie liczby calkowitej do zmiennoprzecinkowej,
+
 
 
 class NodeVisitor(object):
@@ -79,17 +94,22 @@ class NodeVisitor(object):
 
     def generic_visit(self, node):
         if isinstance(node, list):
+            array = []
             for elem in node:
-                self.visit(elem)
+                array.append(self.visit(elem))
+            return array
         else:
             if node is not None:
+                array = []
                 for child in node.children():
                     if isinstance(child, list):
                         for item in child:
                             if isinstance(item, AST.Node):
-                                self.visit(item)
+                                array.append(self.visit(item))
                     elif isinstance(child, AST.Node):
-                        self.visit(child)
+                        array.append(self.visit(child))
+
+                return array
 
 
 class TypeChecker(NodeVisitor):
@@ -100,9 +120,6 @@ class TypeChecker(NodeVisitor):
     def visit_BinExpr(self, node):
         type1 = self.visit(node.left)
         type2 = self.visit(node.right)
-        print type1
-        print type2
-        print node.op
         if ttype[node.op][type1][type2] is None:
             print "Bad expression {} in line {}".format(node.op, '')
         return ttype[node.op][type1][type2]
@@ -112,8 +129,14 @@ class TypeChecker(NodeVisitor):
             return self.visit_Float(node)
         elif re.match(r"(\+|-){0,1}\d+", node.val):
             return self.visit_Integer(node)
-        else:
+        elif re.match(r"($'.*'^|$\".*\"^)", node.val):
             return self.visit_String(node)
+        else:
+            variable = self.scope.get(node.val)
+            if variable is None:
+                print "Variable {} in line {} hasn't been declared".format(node.val, '')
+            else:
+                return variable.type
 
 
     def visit_Integer(self, node):
@@ -132,7 +155,7 @@ class TypeChecker(NodeVisitor):
                 if self.scope.get(curr[0]) is not None:
                     print "Variable {} in line {} has been declared earlier".format(curr[0], '')
                 else:
-                    if node.type == curr[1]:
+                    if node.type == curr[1] or (node.type == 'float' and curr[1] == 'int'):
                         self.scope.put(curr[0], VariableSymbol(curr[0], node.type))
                     else:
                         print "Type mismatch in line {}".format('')
@@ -148,6 +171,15 @@ class TypeChecker(NodeVisitor):
         return (node.id, self.visit(node.expr))
 
     def visit_AssignmentInstr(self, node):
+        type = self.visit(node.expr)
+        var_from_scope = self.scope.get(node.id)
+        if var_from_scope is None:
+            print "Variable {} in line {} hasn't been declared".format(node.val, '')
+        else:
+            if not (var_from_scope.type == type or (var_from_scope.type == 'float' and type=='int')):
+                print "Type mismatch {}".format('')
+                print node.id
+
         return (node.id, self.visit(node.expr))
 
     def visit_ChoiceInstr(self, node):
@@ -180,12 +212,10 @@ class TypeChecker(NodeVisitor):
         self.visit(node.instructions_opt)
 
     def visit_CastFunction(self, node):
-        if self.scope.get(node.functionName) is None:
+        function = self.scope.get(node.functionName)
+        if function is None:
             print "Function {} in line {} has not been declared".format(node.functionName, '')
-        else:
-            args = self.scope.get(node.functionName).arguments
-            if self.visit(args) != self.visit(node.args):
-                print "Argument mismatch in line {}".format('')
+        return function.type
 
 
     def visit_ExprInBrackets(self, node):
@@ -195,14 +225,15 @@ class TypeChecker(NodeVisitor):
         if self.scope.get(node.id) is not None:
             print "Function {} in line {} has been declared earlier".format(node.id, '')
         else:
-            self.visit(node.args_list_or_empty)
             self.scope.put(node.id, FunctionSymbol(node.id, node.type, node.args_list_or_empty))
             self.scope = self.scope.pushScope(node.id)
+            self.visit(node.args_list_or_empty)
             self.visit(node.compound_instr)
             self.scope = self.scope.popScope()
 
     def visit_Argument(self, node):
-        return (node.type, node.id)
+        self.scope.put(node.id, VariableSymbol(node.id, node.type))
+        return (node.id, node.type)
 
     def visit_Block(self, node):
         self.scope = self.scope.pushScope("block")

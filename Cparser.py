@@ -168,7 +168,7 @@ class Cparser(object):
                         | IF '(' error ')' instruction ELSE instruction """
         condition = p[3]
         instruction = p[5]
-        if len(p) > 8:
+        if len(p) >= 8:
             else_instr = p[7]
         else:
             else_instr = None

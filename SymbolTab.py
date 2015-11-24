@@ -22,7 +22,6 @@ class SymbolTable(object):
         self.parent = parent
         self.name = name
         self.store = {}
-        self.scopes= []
 
     def put(self, name, symbol): # put variable symbol or fundef under <name> entry
         self.store[name] = symbol
@@ -41,10 +40,7 @@ class SymbolTable(object):
 
     def pushScope(self, name):
         curr = SymbolTable(self, name)
-        self.scopes.append(curr)
         return curr
 
     def popScope(self):
-        if len(self.scopes) > 0:
-            self.scopes.pop()
         return self.parent

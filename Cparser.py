@@ -168,7 +168,10 @@ class Cparser(object):
                         | IF '(' error ')' instruction ELSE instruction """
         condition = p[3]
         instruction = p[5]
-        else_instr = p[7]
+        if len(p) > 8:
+            else_instr = p[7]
+        else:
+            else_instr = None
         p[0] = AST.ChoiceInstr(condition, instruction, else_instr, p.lineno(1) )
 
     def p_while_instr(self, p):
@@ -278,7 +281,10 @@ class Cparser(object):
     def p_fundefs_opt(self, p):
         """fundefs_opt : fundefs
                        | """
-        p[0] = p[1]
+        if len(p) > 1:
+            p[0] = p[1]
+        else:
+            p[0] = None
 
     def p_fundefs(self, p):
         """fundefs : fundefs fundef

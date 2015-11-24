@@ -231,8 +231,20 @@ class TypeChecker(NodeVisitor):
         function = self.scope.get(node.functionName)
         if function is None:
             print "Function {} in line {} has not been declared".format(node.functionName, node.line)
+            return
+        args_cast = self.visit(node.args)
+        args_scope = self.visit(function.arguments)
+        if len(args_cast) != len(args_scope):
+            print "Wrong numbers of arguments in line {}".format(node.line)
         else:
-            return function.type
+            for arg in args_scope:
+                i = args_scope.index(arg)
+                if arg[1] == 'int' and args_cast[i] == 'float':
+                    print "Warning! You lost float precision in line {}".format(node.line)
+                elif not (arg[1] == args_cast[i] or (arg[1] == 'float' and args_cast[i] == 'int')):
+                    print "Function arguments mismatch in line {}".format(node.line)
+
+        return function.type
 
 
     def visit_ExprInBrackets(self, node):

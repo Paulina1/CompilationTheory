@@ -12,9 +12,10 @@ if (m!=n) {
 }
 else
     res = m;
-
+    res = 1.2;
 print res;
 return res;
+
 }
 
 while(a >= b ) {

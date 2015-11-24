@@ -32,7 +32,7 @@ class Cparser(object):
 
     def p_error(self, p):
         if p:
-            print("Syntax error at line {0}, column {1}: LexToken({2}, '{3}')".format(p.lineno, self.scanner.find_tok_column(p), p.type, p.value))
+            print("Syntax error at line {0}, column {1}: LexToken({2}, '{3}')".format(p.lineno(1), self.scanner.find_tok_column(p), p.type, p.value))
         else:
             print("Unexpected end of input")
 
@@ -85,7 +85,7 @@ class Cparser(object):
         if len(p) == 4:
             type = p[1]
             inits = p[2]
-            p[0] = AST.Declaration(type, inits)
+            p[0] = AST.Declaration(type, inits, p.lineno(1))
 
     #variable initialization
     def p_inits(self, p):
@@ -101,7 +101,7 @@ class Cparser(object):
 
     def p_init(self, p):
         """init : ID '=' expression """
-        p[0] = AST.Init(p[1], p[3])
+        p[0] = AST.Init(p[1], p[3], p.lineno(1))
 
 
     def p_instructions_opt(self, p):
@@ -147,7 +147,7 @@ class Cparser(object):
         """print_instr : PRINT expr_list ';'
                        | PRINT error ';' """
         expr = p[2]
-        p[0] = AST.PrintInstr(expr)
+        p[0] = AST.PrintInstr(expr, p.lineno(1))
 
     def p_labeled_instr(self, p):
         """labeled_instr : ID ':' instruction """
@@ -159,7 +159,7 @@ class Cparser(object):
         """assignment : ID '=' expression ';' """
         id = p[1]
         expr = p[3]
-        p[0] = AST.AssignmentInstr(id, expr)
+        p[0] = AST.AssignmentInstr(id, expr, p.lineno(1))
 
     def p_choice_instr(self, p):
         """choice_instr : IF '(' condition ')' instruction  %prec IFX
@@ -169,7 +169,7 @@ class Cparser(object):
         condition = p[3]
         instruction = p[5]
         else_instr = p[7]
-        p[0] = AST.ChoiceInstr(condition, instruction, else_instr)
+        p[0] = AST.ChoiceInstr(condition, instruction, else_instr, p.lineno(1) )
 
     def p_while_instr(self, p):
         """while_instr : WHILE '(' condition ')' instruction
@@ -188,22 +188,22 @@ class Cparser(object):
     def p_return_instr(self, p):
         """return_instr : RETURN expression ';' """
         expr = p[2]
-        p[0] = AST.ReturnInstr(expr)
+        p[0] = AST.ReturnInstr(expr, p.lineno(1))
 
     def p_continue_instr(self, p):
         """continue_instr : CONTINUE ';' """
-        p[0] = AST.ContinueInstr()
+        p[0] = AST.ContinueInstr(p.lineno(1))
 
     def p_break_instr(self, p):
         """break_instr : BREAK ';' """
-        p[0] = AST.BreakInstr()
+        p[0] = AST.BreakInstr(p.lineno(1))
 
     def p_compound_instr(self, p):
         """compound_instr : '{' declarations instructions_opt '}' """
         if len(p[2].declarations) != 0:
-            p[0] = AST.CompoundInstr(p[2], p[3])
+            p[0] = AST.CompoundInstr(p[2], p[3], p.lineno(1))
         else:
-            p[0] = AST.CompoundInstr(None, p[3])
+            p[0] = AST.CompoundInstr(None, p[3], p.lineno(1))
 
     def p_condition(self, p):
         """condition : expression"""
@@ -245,15 +245,15 @@ class Cparser(object):
         #typ 2 - to w nawiasach
         #typ 3 - to z ID na poczatku
         if len(p) == 2:
-            p[0] = AST.Const(p[1])
+            p[0] = AST.Const(p[1], p.lineno(1))
         elif p[1] != "(" and p[2] == "(": #lapiemy 3 typ czyli wywolanie funkcji
             functionName = p[1]
             args = p[3]
-            p[0] = AST.CastFunction(functionName, args)
+            p[0] = AST.CastFunction(functionName, args, p.lineno(1))
         elif p[1] == "(": #2 typ
             p[0] = AST.ExprInBrackets(p[2])
         else: #1 typ
-            p[0] = AST.BinExpr(p[2], p[1], p[3])
+            p[0] = AST.BinExpr(p[2], p[1], p[3], p.lineno(1))
 
 
     def p_expr_list_or_empty(self, p):
@@ -292,7 +292,7 @@ class Cparser(object):
 
     def p_fundef(self, p):
         """fundef : TYPE ID '(' args_list_or_empty ')' compound_instr """
-        p[0] = AST.Function(p[1], p[2], p[4], p[6])
+        p[0] = AST.Function(p[1], p[2], p[4], p[6], p.lineno(1))
 
     def p_args_list_or_empty(self, p):
         """args_list_or_empty : args_list
@@ -319,4 +319,4 @@ class Cparser(object):
         """arg : TYPE ID """
         type = p[1]
         id = p[2]
-        p[0] = AST.Argument(type, id)
+        p[0] = AST.Argument(type, id, p.lineno(1))

@@ -38,6 +38,7 @@ ttype['<']['int']['int'] = 'int'
 ttype['LE']['int']['int'] = 'int'
 ttype['GE']['int']['int'] = 'int'
 ttype['EQ']['int']['int'] = 'int'
+ttype['==']['int']['int'] = 'int'
 ttype['NEQ']['int']['int'] = 'int'
 ttype['>=']['int']['int'] = 'int'
 ttype['<=']['int']['int'] = 'int'
@@ -47,6 +48,7 @@ ttype['<']['int']['float'] = 'int'
 ttype['LE']['int']['float'] = 'int'
 ttype['GE']['int']['float'] = 'int'
 ttype['EQ']['int']['float'] = 'int'
+ttype['==']['int']['float'] = 'int'
 ttype['NEQ']['int']['float'] = 'int'
 ttype['>=']['int']['float'] = 'int'
 ttype['<=']['int']['float'] = 'int'
@@ -56,6 +58,7 @@ ttype['<']['float']['int'] = 'int'
 ttype['LE']['float']['int'] = 'int'
 ttype['GE']['float']['int'] = 'int'
 ttype['EQ']['float']['int'] = 'int'
+ttype['==']['float']['int'] = 'int'
 ttype['NEQ']['float']['int'] = 'int'
 ttype['>=']['float']['int'] = 'int'
 ttype['>=']['float']['int'] = 'int'
@@ -65,6 +68,7 @@ ttype['<']['float']['float'] = 'int'
 ttype['LE']['float']['float'] = 'int'
 ttype['GE']['float']['float'] = 'int'
 ttype['EQ']['float']['float'] = 'int'
+ttype['==']['float']['float'] = 'int'
 ttype['NEQ']['float']['float'] = 'int'
 ttype['>=']['float']['float'] = 'int'
 ttype['<=']['float']['float'] = 'int'
@@ -76,6 +80,7 @@ ttype['>']['string']['string'] = 'int'
 ttype['<']['string']['string'] = 'int'
 ttype['>=']['string']['string'] = 'int'
 ttype['<=']['string']['string'] = 'int'
+ttype['==']['string']['string'] = 'int'
 ttype['!=']['string']['string'] = 'int'
 ttype['LE']['string']['string'] = 'int'
 ttype['GE']['string']['string'] = 'int'
@@ -121,7 +126,7 @@ class TypeChecker(NodeVisitor):
         type1 = self.visit(node.left)
         type2 = self.visit(node.right)
         if ttype[node.op][type1][type2] is None:
-            print "Bad expression {} in line {}".format(node.op, '')
+            print "Bad expression {} in line {}".format(node.op, node.line)
         return ttype[node.op][type1][type2]
 
     def visit_Const(self, node):
@@ -129,12 +134,12 @@ class TypeChecker(NodeVisitor):
             return self.visit_Float(node)
         elif re.match(r"(\+|-){0,1}\d+", node.val):
             return self.visit_Integer(node)
-        elif re.match(r"($'.*'^|$\".*\"^)", node.val):
+        elif re.match(r"\A('.*'|\".*\")\Z", node.val):
             return self.visit_String(node)
         else:
             variable = self.scope.get(node.val)
             if variable is None:
-                print "Variable {} in line {} hasn't been declared".format(node.val, '')
+                print "Variable {} in line {} hasn't been declared".format(node.val, node.line)
             else:
                 return variable.type
 
@@ -153,16 +158,24 @@ class TypeChecker(NodeVisitor):
         if visited_inits is not None:
             for curr in self.visit(node.inits):
                 if self.scope.get(curr[0]) is not None:
-                    print "Variable {} in line {} has been declared earlier".format(curr[0], '')
+                    print "Variable {} in line {} has been declared earlier".format(curr[0], node.line)
                 else:
                     if node.type == curr[1] or (node.type == 'float' and curr[1] == 'int'):
                         self.scope.put(curr[0], VariableSymbol(curr[0], node.type))
+                    elif node.type == 'int' and curr[1] == 'float':
+                        print "Warning! You lost float precision in line {}".format(node.line)
+                        self.scope.put(curr[0], VariableSymbol(curr[0], node.type))
                     else:
-                        print "Type mismatch in line {}".format('')
+                        print "Type mismatch in line {}".format(node.line)
 
     def visit_ReturnInstr(self, node):
-        if self.scope.parent.get(self.scope.name).type != self.visit(node.expr):
-            print "Type mismatch in line {}".format('')
+        if not isinstance(self.scope.get(self.scope.name), FunctionSymbol):
+            print "Return outside function in line {}".format(node.line)
+        if self.scope.parent.get(self.scope.name) is not None:
+            if self.scope.parent.get(self.scope.name).type == 'int' and self.visit(node.expr) == 'float':
+                print "Warning! You lost float precision in line {}".format(node.line)
+            elif not (self.scope.parent.get(self.scope.name).type == self.visit(node.expr) or (self.scope.parent.get(self.scope.name).type == 'float' and self.visit(node.expr)=='int')):
+                print "Type mismatch in line {}".format(node.line)
 
     def visit_PrintInstr(self, node):
         self.visit(node.expr)
@@ -174,11 +187,14 @@ class TypeChecker(NodeVisitor):
         type = self.visit(node.expr)
         var_from_scope = self.scope.get(node.id)
         if var_from_scope is None:
-            print "Variable {} in line {} hasn't been declared".format(node.val, '')
+            print "Variable {} in line {} hasn't been declared".format(node.id, node.line)
         else:
-            if not (var_from_scope.type == type or (var_from_scope.type == 'float' and type=='int')):
-                print "Type mismatch {}".format('')
-                print node.id
+            if var_from_scope.type == 'int' and type == 'float':
+                print "Warning! You lost float precision in line {}".format(node.line)
+                self.scope.put(node.id, VariableSymbol(node.id, type))
+            elif not (var_from_scope.type == type or (var_from_scope.type == 'float' and type=='int')):
+                print "Type mismatch in line {}".format(node.line)
+
 
         return (node.id, self.visit(node.expr))
 
@@ -201,11 +217,11 @@ class TypeChecker(NodeVisitor):
 
     def visit_ContinueInstr(self, node):
         if self.scope.name != "loop":
-            print "Continue outside the loop in line {}".format('')
+            print "Continue outside the loop in line {}".format(node.line)
 
     def visit_BreakInstr(self, node):
         if self.scope.name != "loop":
-            print "Break outside the loop in line {}".format('')
+            print "Break outside the loop in line {}".format(node.line)
 
     def visit_CompoundInstr(self, node):
         self.visit(node.declarations)
@@ -214,8 +230,9 @@ class TypeChecker(NodeVisitor):
     def visit_CastFunction(self, node):
         function = self.scope.get(node.functionName)
         if function is None:
-            print "Function {} in line {} has not been declared".format(node.functionName, '')
-        return function.type
+            print "Function {} in line {} has not been declared".format(node.functionName, node.line)
+        else:
+            return function.type
 
 
     def visit_ExprInBrackets(self, node):
@@ -223,7 +240,7 @@ class TypeChecker(NodeVisitor):
 
     def visit_Function(self, node):
         if self.scope.get(node.id) is not None:
-            print "Function {} in line {} has been declared earlier".format(node.id, '')
+            print "Function {} in line {} has been declared earlier".format(node.id, node.line)
         else:
             self.scope.put(node.id, FunctionSymbol(node.id, node.type, node.args_list_or_empty))
             self.scope = self.scope.pushScope(node.id)

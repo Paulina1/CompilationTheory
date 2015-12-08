@@ -171,6 +171,7 @@ class TypeChecker(NodeVisitor):
                         print "Type mismatch in line {}".format(node.line)
 
     def visit_ReturnInstr(self, node):
+        self.scope.put('return', 'return')
         if not isinstance(self.scope.get(self.scope.name), FunctionSymbol):
             print "Return outside function in line {}".format(node.line)
         if self.scope.parent.get(self.scope.name) is not None:
@@ -262,6 +263,8 @@ class TypeChecker(NodeVisitor):
             self.scope = self.scope.pushScope(node.id)
             self.visit(node.args_list_or_empty)
             self.visit(node.compound_instr)
+            if node.type != "void" and self.scope.get_not_parent('return') is None:
+                print "No return for function in line {}".format(node.line)
             self.scope = self.scope.popScope()
 
     def visit_Argument(self, node):

@@ -175,9 +175,10 @@ class TypeChecker(NodeVisitor):
         if not isinstance(self.scope.get(self.scope.name), FunctionSymbol):
             print "Return outside function in line {}".format(node.line)
         if self.scope.parent.get(self.scope.name) is not None:
-            if self.scope.parent.get(self.scope.name).type == 'int' and self.visit(node.expr) == 'float':
+            expr = self.visit(node.expr)
+            if self.scope.parent.get(self.scope.name).type == 'int' and expr == 'float':
                 print "Warning! You lost float precision in line {}".format(node.line)
-            elif not (self.scope.parent.get(self.scope.name).type == self.visit(node.expr) or (self.scope.parent.get(self.scope.name).type == 'float' and self.visit(node.expr)=='int')):
+            elif not (self.scope.parent.get(self.scope.name).type == expr or (self.scope.parent.get(self.scope.name).type == 'float' and expr=='int')):
                 print "Type mismatch in line {}".format(node.line)
 
     def visit_PrintInstr(self, node):

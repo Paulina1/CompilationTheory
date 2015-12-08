@@ -187,6 +187,8 @@ class TypeChecker(NodeVisitor):
 
     def visit_AssignmentInstr(self, node):
         type = self.visit(node.expr)
+        if type is None:
+            return None
         var_from_scope = self.scope.get(node.id)
         if var_from_scope is None:
             print "Variable {} in line {} hasn't been declared".format(node.id, node.line)
@@ -198,7 +200,7 @@ class TypeChecker(NodeVisitor):
                 print "Type mismatch in line {}".format(node.line)
 
 
-        return (node.id, self.visit(node.expr))
+        return (node.id, type)
 
     def visit_ChoiceInstr(self, node):
         self.visit(node.condition)

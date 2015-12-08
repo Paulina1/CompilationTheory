@@ -159,7 +159,7 @@ class TypeChecker(NodeVisitor):
         visited_inits = self.visit(node.inits)
         if visited_inits is not None:
             for curr in self.visit(node.inits):
-                if self.scope.get(curr[0]) is not None:
+                if self.scope.get_not_parent(curr[0]) is not None:
                     print "Variable {} in line {} has been declared earlier".format(curr[0], node.line)
                 else:
                     if node.type == curr[1] or (node.type == 'float' and curr[1] == 'int'):
